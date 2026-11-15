@@ -9,9 +9,13 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -59,7 +63,7 @@ public class ProjectSecurityConfig {
 
                 .csrf(csrfConfig -> csrfConfig
                         .csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
-                        .ignoringRequestMatchers("/myCards", "/register") //working those endpoints without csrf token
+                        .ignoringRequestMatchers("/myCards", "/register", "/login") // REST login has no browser CSRF token
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))//generate csrf token
 
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
@@ -84,9 +88,12 @@ public class ProjectSecurityConfig {
                                 , "/error"
                                 , "/register"
                                 , "/authority/*"
-                                , "/Invalidsession").permitAll());
+                                , "/Invalidsession"
+                                , "/apiLogin").permitAll());
 
-        http.formLogin(withDefaults()); //flc->flc.disable() for disable log page
+        // This application authenticates through the JSON /login controller.
+        // Enabling formLogin makes Spring Security intercept POST /login and return HTML.
+        http.formLogin(AbstractHttpConfigurer::disable);
 
         http.httpBasic(exception -> exception
                 .authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
@@ -107,6 +114,17 @@ public class ProjectSecurityConfig {
     @Bean
     public CompromisedPasswordChecker compromisedPasswordChecker() {
         return new HaveIBeenPwnedRestApiPasswordChecker();
+    }
+
+    //cause init to security.
+    @Bean
+    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService
+            , PasswordEncoder passwordEncoder) {
+        ShayanBankUsernamePwdAuthenticationProvider provider =
+                new ShayanBankUsernamePwdAuthenticationProvider(passwordEncoder, userDetailsService);
+        ProviderManager providerManager = new ProviderManager(provider);
+        providerManager.setEraseCredentialsAfterAuthentication(false);
+        return providerManager;
     }
 
 

@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -80,8 +81,8 @@ public class ProjectProdSecurityConfig {
                 .csrf(crfConfig -> crfConfig.disable())
                 .authorizeHttpRequests((request) -> request
                         .requestMatchers("/myAccount", "/myBalance", "/myLoan").authenticated()
-                        .requestMatchers("/myContact", "/myCards", "/error", "/register").permitAll())
-                .formLogin(withDefaults()) //flc->flc.disable() for disable log page
+                        .requestMatchers("/myContact", "/myCards", "/error", "/register", "/login").permitAll())
+                .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(
                         hbc->hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()))
                 //handle global exceptions

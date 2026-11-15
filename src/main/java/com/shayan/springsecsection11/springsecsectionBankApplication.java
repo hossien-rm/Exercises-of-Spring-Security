@@ -6,10 +6,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 @SpringBootApplication
 @EnableWebSecurity
-public class springsecsection11BankApplication {
+public class springsecsectionBankApplication {
 	
 	public static void main(String[] args) {
-		SpringApplication.run(springsecsection11BankApplication.class, args);
+		SpringApplication.run(springsecsectionBankApplication.class, args);
 	}
 
 }
